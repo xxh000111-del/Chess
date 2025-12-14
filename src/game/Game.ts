@@ -1,7 +1,7 @@
 import { Board } from "@/game/board/Board";
 import { KeyboardInput } from "@/input/KeyboardInput";
 import { MouseInput } from "@/input/MouseInput";
-import { Piece } from "@/game/board/Piece";
+import { RedPiece, OrangePiece, YellowPiece, GreenPiece, TealPiece, BluePiece, IndigoPiece, PurplePiece, BlackPiece, WhitePiece } from "@/game/board/Piece";
 
 /**
  * 主游戏类，负责更新与渲染主循环以及输入的协调。
@@ -20,10 +20,17 @@ export class Game {
 
     this.board = new Board(8, 8, 64);
 
-    // 初始化一些棋子示例
-    this.board.addPiece(new Piece(0, 0, 'white'));
-    this.board.addPiece(new Piece(3, 3, 'green'));
-    this.board.addPiece(new Piece(5, 2, 'black'));
+    // 初始化 10 个不同颜色的子类棋子（位置/颜色在子类中定义）
+    this.board.addPiece(new RedPiece());
+    this.board.addPiece(new OrangePiece());
+    this.board.addPiece(new YellowPiece());
+    this.board.addPiece(new GreenPiece());
+    this.board.addPiece(new TealPiece());
+    this.board.addPiece(new BluePiece());
+    this.board.addPiece(new IndigoPiece());
+    this.board.addPiece(new PurplePiece());
+    this.board.addPiece(new BlackPiece());
+    this.board.addPiece(new WhitePiece());
 
     this.keyboard = new KeyboardInput();
     this.mouse = new MouseInput(canvas);
@@ -90,11 +97,11 @@ export class Game {
 
   /** 更新游戏逻辑 */
   private update(_: number) {
-    // 键盘控制光标移动
-    if (this.keyboard.isPressed('ArrowUp')) this.board.moveCursor(0, -1);
-    if (this.keyboard.isPressed('ArrowDown')) this.board.moveCursor(0, 1);
-    if (this.keyboard.isPressed('ArrowLeft')) this.board.moveCursor(-1, 0);
-    if (this.keyboard.isPressed('ArrowRight')) this.board.moveCursor(1, 0);
+    // 键盘控制：移动当前选中棋子（若存在）
+    if (this.keyboard.isPressed('ArrowUp')) this.board.moveSelected(0, -1);
+    if (this.keyboard.isPressed('ArrowDown')) this.board.moveSelected(0, 1);
+    if (this.keyboard.isPressed('ArrowLeft')) this.board.moveSelected(-1, 0);
+    if (this.keyboard.isPressed('ArrowRight')) this.board.moveSelected(1, 0);
   }
 
   /** 绘制 */

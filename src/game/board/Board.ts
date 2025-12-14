@@ -6,8 +6,7 @@ export class Board {
   readonly cols: number;
   readonly cellSize: number;
 
-  cursorX = 0;
-  cursorY = 0;
+  // 光标已移除；使用鼠标选中/拖动棋子进行控制
 
   pieces: Piece[] = [];
   selectedPiece: Piece | null = null; // 点击选中棋子
@@ -29,22 +28,7 @@ export class Board {
     this.pieces.push(piece);
   }
 
-  moveCursor(dx: number, dy: number) {
-    this.cursorX = Math.max(0, Math.min(this.cols - 1, this.cursorX + dx));
-    this.cursorY = Math.max(0, Math.min(this.rows - 1, this.cursorY + dy));
-  }
-
-  setCursorByPixel(px: number, py: number) {
-    const { x, y } = this.pixelToCell(px, py);
-    this.cursorX = Math.max(0, Math.min(this.cols - 1, x));
-    this.cursorY = Math.max(0, Math.min(this.rows - 1, y));
-  }
-
-  drawCursor(ctx: CanvasRenderingContext2D) {
-    const { px, py } = this.cellToPixel(this.cursorX, this.cursorY);
-    ctx.fillStyle = 'red';
-    ctx.fillRect(px + 2, py + 2, this.cellSize - 4, this.cellSize - 4);
-  }
+  // 光标控制已移除，改为直接通过鼠标选中和拖拽棋子
   draw(ctx: CanvasRenderingContext2D) {
     // 计算并应用居中布局
     const boardWidth = this.cols * this.cellSize;
@@ -85,10 +69,20 @@ export class Board {
       ctx.stroke();
     }
 
-    // 绘制棋子（确保拖动棋子绘制在最上层）
+    // 绘制棋子（确保拖动棋子绘制在最上层）。非拖动棋子正常绘制；选中棋子绘制描边
     for (const piece of this.pieces) {
       if (piece === this.draggingPiece) continue;
       this.drawPieceAt(ctx, piece, piece.x * this.cellSize, piece.y * this.cellSize);
+      // 选中描边
+      if (piece === this.selectedPiece) {
+        const px = piece.x * this.cellSize;
+        const py = piece.y * this.cellSize;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(px + this.cellSize / 2, py + this.cellSize / 2, this.cellSize * 0.35 + 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
     if (this.draggingPiece) {
       const localX = this.dragX - this.originX - this.dragOffsetX;
@@ -97,9 +91,6 @@ export class Board {
     }
 
     ctx.restore();
-
-    // 光标绘制（使用绝对坐标）
-    this.drawCursor(ctx);
   }
 
   /**
@@ -120,6 +111,15 @@ export class Board {
   /** 将像素坐标转换为格坐标 */
   pixelToCell(px: number, py: number) {
     return { x: Math.floor((px - this.originX) / this.cellSize), y: Math.floor((py - this.originY) / this.cellSize) };
+  }
+
+  /**
+   * 移动当前选中棋子（键盘控制）
+   */
+  moveSelected(dx: number, dy: number) {
+    if (!this.selectedPiece) return;
+    this.selectedPiece.x = Math.max(0, Math.min(this.cols - 1, this.selectedPiece.x + dx));
+    this.selectedPiece.y = Math.max(0, Math.min(this.rows - 1, this.selectedPiece.y + dy));
   }
 
   // --- 拖拽状态 ---
@@ -186,8 +186,7 @@ export class Board {
     }
 
     // 同时更新光标位置
-    this.cursorX = x;
-    this.cursorY = y;
+    // removed cursor; selection already updated above
   }
 
   private drawPieceAt(ctx: CanvasRenderingContext2D, piece: Piece, px: number, py: number) {
