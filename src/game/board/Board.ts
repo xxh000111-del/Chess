@@ -28,6 +28,10 @@ export class Board {
     this.pieces.push(piece);
   }
 
+  isCellOccupied(x: number, y: number) {
+    return this.pieces.some(p => p.x === x && p.y === y);
+  }
+
   // 光标控制已移除，改为直接通过鼠标选中和拖拽棋子
   draw(ctx: CanvasRenderingContext2D) {
     // 计算并应用居中布局
@@ -154,8 +158,12 @@ export class Board {
   handleMouseUp(px: number, py: number) {
     if (this.draggingPiece) {
       const { x, y } = this.pixelToCell(px, py);
-      this.draggingPiece.x = Math.max(0, Math.min(this.cols - 1, x));
-      this.draggingPiece.y = Math.max(0, Math.min(this.rows - 1, y));
+      const tx = Math.max(0, Math.min(this.cols - 1, x));
+      const ty = Math.max(0, Math.min(this.rows - 1, y));
+      // 只有当目标格合法且根据 piece 规则允许时才执行移动
+      if (this.draggingPiece.canMoveTo(tx, ty, this)) {
+        this.draggingPiece.moveTo(tx, ty, this);
+      }
       this.draggingPiece = null;
     }
   }
@@ -170,8 +178,10 @@ export class Board {
     if (this.selectedPiece) {
       // 已选中棋子，点击空格则移动
       if (!clickedPiece) {
-        this.selectedPiece.x = x;
-        this.selectedPiece.y = y;
+        // 若当前选中棋子允许移动到该位置则移动
+        if (this.selectedPiece.canMoveTo(x, y, this)) {
+          this.selectedPiece.moveTo(x, y, this);
+        }
         this.selectedPiece = null; // 移动后取消选中
       } else if (clickedPiece === this.selectedPiece) {
         // 点击同一个棋子，取消选中
@@ -179,10 +189,12 @@ export class Board {
       } else {
         // 点击其他棋子，切换选中
         this.selectedPiece = clickedPiece;
+        if (this.selectedPiece.onSelect) this.selectedPiece.onSelect(this);
       }
     } else {
       // 未选中棋子，点击有棋子则选中
       if (clickedPiece) this.selectedPiece = clickedPiece;
+      if (this.selectedPiece && this.selectedPiece.onSelect) this.selectedPiece.onSelect(this);
     }
 
     // 同时更新光标位置
