@@ -24,6 +24,17 @@ export class Board {
     this.cellSize = cellSize;
   }
 
+  /** 返回目标格列表，表示选中棋子可以移动到的格 */
+  getMoveTargets(piece: Piece) {
+    const targets: Array<{ x: number; y: number }> = [];
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        if (piece.canMoveTo(x, y, this)) targets.push({ x, y });
+      }
+    }
+    return targets;
+  }
+
   addPiece(piece: Piece) {
     this.pieces.push(piece);
   }
@@ -74,6 +85,21 @@ export class Board {
     }
 
     // 绘制棋子（确保拖动棋子绘制在最上层）。非拖动棋子正常绘制；选中棋子绘制描边
+    // 如果有选中棋子，先绘制可移动目标高亮
+    if (this.selectedPiece && !this.draggingPiece) {
+      const targets = this.getMoveTargets(this.selectedPiece);
+      ctx.save();
+      ctx.fillStyle = 'rgba(80,160,255,0.18)';
+      ctx.strokeStyle = 'rgba(80,160,255,0.35)';
+      for (const t of targets) {
+        const rx = t.x * this.cellSize;
+        const ry = t.y * this.cellSize;
+        ctx.fillRect(rx + 2, ry + 2, this.cellSize - 4, this.cellSize - 4);
+        ctx.strokeRect(rx + 2, ry + 2, this.cellSize - 4, this.cellSize - 4);
+      }
+      ctx.restore();
+    }
+
     for (const piece of this.pieces) {
       if (piece === this.draggingPiece) continue;
       this.drawPieceAt(ctx, piece, piece.x * this.cellSize, piece.y * this.cellSize);
