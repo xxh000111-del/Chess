@@ -5,6 +5,7 @@ export class Piece {
   constructor(
     public x: number, // 列索引
     public y: number, // 行索引
-    public color: string = 'blue' // 默认颜色
+    public color: string = 'blue', // 默认颜色
+    public imgKey?: string // 可选图片键，供 Board 加载并绘制
   ) {}
 }
